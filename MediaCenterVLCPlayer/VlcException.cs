@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace MediaCenterVLCPlayer
 {
-    class VlcException : Exception
+    public class VlcException : Exception
     {
         protected string _err;
 

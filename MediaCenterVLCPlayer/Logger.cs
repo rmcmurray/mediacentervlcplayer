@@ -23,20 +23,20 @@ namespace MediaCenterVLCPlayer
 
         ~Logger()
         {
-            if (writer != null)
-                writer.Close();
-
-            if (fStream != null)
-                fStream.Close();
+            Close();
         }
 
         public void Close()
         {
-            if (writer != null)
-                writer.Close();
+            try
+            {
+                if (writer != null)
+                    writer.Close();
 
-            if (fStream != null)
-                fStream.Close();
+                if (fStream != null)
+                    fStream.Close();
+            }
+            catch (Exception) { }
         }
 
         public void writeToLog(string msg)

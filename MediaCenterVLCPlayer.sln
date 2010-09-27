@@ -3,9 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaCenterVLCPlayer", "MediaCenterVLCPlayer\MediaCenterVLCPlayer.csproj", "{A701E973-1957-4975-89FC-6E8A938ADAB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VLCPlayerTestSuite", "VLCPlayerTestSuite\VLCPlayerTestSuite.csproj", "{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5CCABBE3-9EE8-49C5-8D15-D87D1A2A066D}"
+	ProjectSection(SolutionItems) = preProject
+		Local.testsettings = Local.testsettings
+		MediaCenterVLCPlayer.vsmdi = MediaCenterVLCPlayer.vsmdi
+		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaCenterVLCPlayerTestSuite", "MediaCenterVLCPlayerTestSuite\MediaCenterVLCPlayerTestSuite.csproj", "{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}"
 EndProject
 Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = MediaCenterVLCPlayer.vsmdi
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -25,16 +35,16 @@ Global
 		{A701E973-1957-4975-89FC-6E8A938ADAB9}.Release|Mixed Platforms.Build.0 = Release|x86
 		{A701E973-1957-4975-89FC-6E8A938ADAB9}.Release|x86.ActiveCfg = Release|x86
 		{A701E973-1957-4975-89FC-6E8A938ADAB9}.Release|x86.Build.0 = Release|x86
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{159BBA62-EA76-49EF-8047-1B0EEE0C4C9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7267665F-D92C-41A8-81BE-DE3B13B2D7E7}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

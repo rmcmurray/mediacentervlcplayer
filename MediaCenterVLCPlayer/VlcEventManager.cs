@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace MediaCenterVLCPlayer
 {
-    class VlcEventManager
+    public class VlcEventManager
     {
         private readonly List<VlcEventType> _AttachedEvents;
         public static IntPtr Handle;
