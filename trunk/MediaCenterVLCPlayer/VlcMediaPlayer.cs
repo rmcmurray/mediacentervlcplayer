@@ -43,20 +43,30 @@ namespace MediaCenterVLCPlayer
         {
             get
             {
-                IntPtr media = VLCLib.libvlc_media_player_get_media(VlcMediaPlayer.Handle);
-                if (media == IntPtr.Zero) return null;
-                return new VlcMedia(media);
+                if (media == null)
+                {
+                    IntPtr mediaHandle = VLCLib.libvlc_media_player_get_media(Handle);
+                    if (mediaHandle == IntPtr.Zero) return null;
+                    media = new VlcMedia(mediaHandle);
+                }
+                return media;
             }
         }
 
         public void Play()
         {
-            int ret = VLCLib.libvlc_media_player_play(VlcMediaPlayer.Handle);
+            int ret = VLCLib.libvlc_media_player_play(Handle);
             if (ret == -1)
                 throw new VlcException();
 
             playing = true;
             paused = false;
+
+            while (VLCLib.libvlc_media_player_is_playing(Handle) < 1)
+            {
+                System.Threading.Thread.Sleep(1 * 100);
+            }
+            Media.LoadMediaMetaData();
         }
 
         public bool IsPlaying { get { return playing && !paused; }}
@@ -165,6 +175,17 @@ namespace MediaCenterVLCPlayer
         */
         private void loadAspectRatios()
         {
+        }
+
+        public bool ChangeSubtitleTrack(int trackIndex)
+        {
+            if (trackIndex <= media.SubtitleTracks.Count - 1)
+            {
+                VLCLib.libvlc_track_description_t subtitleTrack = (VLCLib.libvlc_track_description_t)media.SubtitleTracks[trackIndex];
+                VLCLib.libvlc_video_set_spu(Handle, subtitleTrack.i_id);
+                return true;
+            }
+            return false;
         }
     }
 }
