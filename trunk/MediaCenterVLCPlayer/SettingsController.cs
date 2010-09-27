@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
@@ -15,11 +16,9 @@ namespace MediaCenterVLCPlayer
     public class SettingsController
     {
         public static SettingsController Instance;
-        private Dictionary<int, VLCLib.libvlc_audio_output_t> _audioOutputs;
-        private Dictionary<int, AudioDevice[]> _audioOutputDevices;
-        private Dictionary<int, VLCLib.libvlc_track_description_t> _subtitleTracks;
-        private Dictionary<int, VLCLib.libvlc_track_description_t> _audioTracks;
-        private Dictionary<int, String> _aspectRations;
+        public Dictionary<int, VLCLib.libvlc_audio_output_t> _audioOutputs;
+        public Dictionary<int, AudioDevice[]> _audioOutputDevices;
+        public Dictionary<int, String> _aspectRations;
 
         private int _currentAudioDeviceId;
         private int _currentAudioChannelId;
@@ -108,20 +107,7 @@ namespace MediaCenterVLCPlayer
 
                 // current video aspect ratio
                 int i = 0;
-                uint w = 0, h = 0;
-                VLCLib.libvlc_video_get_size(VlcMediaPlayer.Handle, 0, ref w, ref h);
-                float width = (float)Convert.ToDecimal(w);
-                float height = (float)Convert.ToDecimal(h);
-                if (width > 0.0 && height > 0.0)
-                {
-                    string currentRatio = (width / height).ToString();
-                    if (currentRatio.Length > 4)
-                        currentRatio = currentRatio.Substring(0, 4);
-
-                    CurrentAspectRatio = i;
-                    _aspectRations.Add(i++, currentRatio);
-                }
-
+                _aspectRations.Add(i++, VlcMedia.Instance.AspectRatio);
                 _aspectRations.Add(i++, VLCLib.AspectRatio.FullScreen);
                 _aspectRations.Add(i++, VLCLib.AspectRatio.WideScreen);
                 _aspectRations.Add(i++, VLCLib.AspectRatio.DVD);
@@ -134,132 +120,15 @@ namespace MediaCenterVLCPlayer
         }
         private void _loadAudioOutputs()
         {
-            Logger.WriteToLog("Loading Audio Outputs and Devices");
-            try
-            {
-                _audioOutputs = new Dictionary<int, VLCLib.libvlc_audio_output_t>();
-                IntPtr pOutputs = VLCLib.libvlc_audio_output_list_get(VlcInstance.Handle);
-                if (pOutputs != IntPtr.Zero)
-                {
-                    int i = 0;
-                    VLCLib.libvlc_audio_output_t output = (VLCLib.libvlc_audio_output_t)Marshal.PtrToStructure(pOutputs, typeof(VLCLib.libvlc_audio_output_t));
-                    Logger.WriteToLog("Audio Output: " + output.psz_name);
-                    int deviceCount = VLCLib.libvlc_audio_output_device_count(VlcInstance.Handle, output.psz_name);
-                    Logger.WriteToLog("Found " + deviceCount.ToString() + " output devices for " + output.psz_name);
-                    if (deviceCount > 0)
-                        _audioOutputs.Add(i, output);
-
-                    while (output.p_next != IntPtr.Zero)
-                    {
-                        i++;
-                        output = (VLCLib.libvlc_audio_output_t)Marshal.PtrToStructure(output.p_next,
-                            typeof(VLCLib.libvlc_audio_output_t));
-                        Logger.WriteToLog("Audio Output: " + output.psz_name);
-                        int mdeviceCount = VLCLib.libvlc_audio_output_device_count(VlcInstance.Handle, output.psz_name);
-                        Logger.WriteToLog("Found " + mdeviceCount.ToString() + " output devices for " + output.psz_name);
-                        if (mdeviceCount > 0)
-                            _audioOutputs.Add(i, output);
-                    }
-                }
-                VLCLib.libvlc_audio_output_list_release(pOutputs);
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error during loading Audio Outputs: " + e.Message);
-            }
         }
         private void _loadAudioTracks()
         {
-            Logger.WriteToLog("Loading Audio Outputs and Devices");
-            try
-            {
-                _audioTracks = new Dictionary<int, VLCLib.libvlc_track_description_t>();
-                int trackCount = VLCLib.libvlc_audio_get_track_count(VlcMediaPlayer.Handle) -1;
-                Logger.WriteToLog("Found " + trackCount.ToString() + " audio tracks");
-                IntPtr p_track = VLCLib.libvlc_audio_get_track_description(VlcMediaPlayer.Handle);
-                if (p_track != IntPtr.Zero)
-                {
-                    VLCLib.libvlc_track_description_t desc = (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(p_track, typeof(VLCLib.libvlc_track_description_t));
-                    for (int i = 0; i < trackCount; i++)
-                    {
-                        if (desc.p_next != IntPtr.Zero)
-                        {
-                            desc = (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(desc.p_next, typeof(VLCLib.libvlc_track_description_t));
-                            Logger.WriteToLog("Audio track: " + desc.psz_name);
-                            _audioTracks.Add(i, desc);
-                        }
-                    }
-                }
-                VLCLib.libvlc_track_description_release(p_track);
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error loading audio tracks: " + e.Message);
-            }
         }
         private void _loadSubtitles()
         {
-            Logger.WriteToLog("Loading Subtitle Tracks");
-            try
-            {
-                _subtitleTracks = new Dictionary<int, VLCLib.libvlc_track_description_t>();
-                int subCount = VLCLib.libvlc_video_get_spu_count(VlcMediaPlayer.Handle);
-                Logger.WriteToLog("Found " + subCount.ToString() + " subtitle tracks");
-                IntPtr p_track = VLCLib.libvlc_video_get_spu_description(VlcMediaPlayer.Handle);
-                if (p_track != IntPtr.Zero)
-                {
-                    VLCLib.libvlc_track_description_t desc = (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(p_track, typeof(VLCLib.libvlc_track_description_t));
-                    desc.i_id = 0;
-                    _subtitleTracks.Add(0, desc);
-                    int i = 1;
-                    while (desc.p_next != IntPtr.Zero)
-                    {
-                        desc = (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(desc.p_next, typeof(VLCLib.libvlc_track_description_t));
-                        Logger.WriteToLog("Subtitle track: " + desc.psz_name);
-                        _subtitleTracks.Add(i, desc);
-                        i++;
-                    }
-                }
-                VLCLib.libvlc_track_description_release(p_track);
-                CurrentSubtitleTrackId = 0;
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error loading subtitles: " + e.Message);
-            }
         }
         private void _loadAudioOutputDevices()
         {
-            Logger.WriteToLog("Loading Audio Output Devices");
-            try
-            {
-                _audioOutputDevices = new System.Collections.Generic.Dictionary<int, AudioDevice[]>();
-                for (int i = 0; i < _audioOutputs.Count; i++)
-                {
-                    int deviceCount = VLCLib.libvlc_audio_output_device_count(VlcInstance.Handle, _audioOutputs[i].psz_name);
-                    Logger.WriteToLog("Found " + deviceCount.ToString() + " devices for Audio Output: " + _audioOutputs[i].psz_name);
-                    if (deviceCount > 0)
-                    {
-                        _audioOutputDevices.Add(i, new AudioDevice[deviceCount]);
-                        for (int d = 0; d < deviceCount; d++)
-                        {
-                            IntPtr pDeviceId = VLCLib.libvlc_audio_output_device_id(VlcInstance.Handle, _audioOutputs[i].psz_name, d);
-                            IntPtr pDeviceName = VLCLib.libvlc_audio_output_device_longname(VlcInstance.Handle, _audioOutputs[i].psz_name, d);
-                            String strDeviceId = Marshal.PtrToStringAnsi(pDeviceId);
-                            String strDeviceName = Marshal.PtrToStringAnsi(pDeviceName);
-                            Logger.WriteToLog("Adding Device: " + strDeviceName);
-                            AudioDevice device = new AudioDevice();
-                            device.deviceId = strDeviceId;
-                            device.deviceName = strDeviceName;
-                            _audioOutputDevices[i][d] = device;
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error loading audio output devices: " + e.Message);
-            }
         }
 
         public void ApplyDefaultSettings()
@@ -305,6 +174,7 @@ namespace MediaCenterVLCPlayer
             // sync the Audio Tracks menu
             Logger.WriteToLog("Syncing Audio Tracks menu");
             ToolStripMenuItem audioTracksMenuItem = Form1.Instance.audioTracksToolStripMenuItem;
+            ArrayList _audioTracks = VlcMedia.Instance.AudioTracks;
             for (int a = 0; a < _audioTracks.Count; a++)
             {
                 VLCLib.libvlc_track_description_t audioTrack = (VLCLib.libvlc_track_description_t)_audioTracks[a];
@@ -354,7 +224,7 @@ namespace MediaCenterVLCPlayer
             // sync the Audio Subtitles menu
             Logger.WriteToLog("Syncing subtitles menu");
             ToolStripMenuItem subtitlesMenuItem = Form1.Instance.subtitlesToolStripMenuItem;
-
+            ArrayList _subtitleTracks = VlcMedia.Instance.SubtitleTracks;
             for (int j = 0; j < _subtitleTracks.Count; j++)
             {
                 VLCLib.libvlc_track_description_t subtitleTrack = (VLCLib.libvlc_track_description_t)_subtitleTracks[j];
@@ -520,7 +390,7 @@ namespace MediaCenterVLCPlayer
 
         public static void disabledToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (SettingsController.Instance._subtitleTracks.Count > 0)
+            if (VlcMedia.Instance.SubtitleTracks.Count > 0)
             {
                 VLCLib.libvlc_video_set_spu(VlcMediaPlayer.Handle, 0);
                 SettingsController.Instance.CurrentSubtitleTrackId = 0;

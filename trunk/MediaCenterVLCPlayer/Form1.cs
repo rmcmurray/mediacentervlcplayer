@@ -15,7 +15,7 @@ namespace MediaCenterVLCPlayer
         VlcInstance instance;
         VlcMediaPlayer player;
         VlcEventManager eventmanager;
-        SettingsController settings;
+        public SettingsController settings;
         Logger myLogger;
 
         public Form1(string mediafile)
@@ -49,32 +49,8 @@ namespace MediaCenterVLCPlayer
             IntPtr logger = VLCLib.libvlc_log_open(VlcInstance.Handle);
             VLCLib.libvlc_set_log_verbosity(VlcInstance.Handle, 10);
 
-            // setup video file and player object
-            //MessageBox.Show("File: " + mediafile);
-            VlcMedia media;
-            myLogger.writeToLog("Mediafile appears to be: " + mediafile);
-            try
-            {
-                System.IO.FileAttributes attr = System.IO.File.GetAttributes(System.IO.Path.GetFullPath(mediafile));
-                if ((attr & System.IO.FileAttributes.Directory) == System.IO.FileAttributes.Directory)
-                {
-                    myLogger.writeToLog(mediafile + " appears to be a directory, assuming it's a dvd");
-                    media = new VlcMedia(instance, @"dvd://" + mediafile);
-                }
-                else
-                {
-                    myLogger.writeToLog(mediafile + " appears to be a file, loading as a file");
-                    media = new VlcMedia(instance, mediafile);
-                }
-            }
-            catch (Exception e)
-            {
-                myLogger.writeToLog(mediafile + " is not a valid path for using System.IO.Path calls on, passing it on directly");
-                media = new VlcMedia(instance, mediafile);
-            }
-
             myLogger.writeToLog("Creating instance of VLC Media Player");
-            player = new VlcMediaPlayer(media);
+            player = instance.CreatePlayer(mediafile);
             player.Drawable = panelHandle;
             // give the remote control lib access to the active panel so it gets keyboard/mouse/remote events
             remoteManager.playerHandle = VlcMediaPlayer.Handle;
@@ -84,11 +60,15 @@ namespace MediaCenterVLCPlayer
             eventmanager = new VlcEventManager(p_event_manager);
             eventmanager.InitalizeEvents();
             myLogger.writeToLog("Setting media to play");
+        }
+
+        public void PlayMedia()
+        {
             player.Play();
             System.Threading.Thread.Sleep(1 * 1000);
             while (VLCLib.libvlc_media_player_is_playing(VlcMediaPlayer.Handle) < 1)
             {
-                System.Threading.Thread.Sleep(1 * 1000);
+                System.Threading.Thread.Sleep(1 * 100);
             }
             myLogger.writeToLog("Loading settings now that the media is playing");
             // activate the settings controller

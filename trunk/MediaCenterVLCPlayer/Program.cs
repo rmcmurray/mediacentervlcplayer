@@ -20,6 +20,8 @@ namespace MediaCenterVLCPlayer
                 Environment.Exit(0);
             Form1 form = new Form1(args[0]);
             Application.Run(form);
+            if (form != null)
+                form.PlayMedia();
         }
     }
 }
