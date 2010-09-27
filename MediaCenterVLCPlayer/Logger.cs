@@ -47,7 +47,7 @@ namespace MediaCenterVLCPlayer
 
         public static void WriteToLog(string msg)
         {
-            Logger.Instance.writeToLog(msg);
+            //Logger.Instance.writeToLog(msg);
         }
     }
 }

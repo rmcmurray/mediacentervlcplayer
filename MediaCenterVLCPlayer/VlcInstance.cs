@@ -26,6 +26,9 @@ namespace MediaCenterVLCPlayer
 
         public VlcMediaPlayer CreatePlayer(string mediaPath)
         {
+            if (!System.IO.File.Exists(mediaPath))
+                return null;
+
             VlcMedia media;
             try
             {
