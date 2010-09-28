@@ -84,8 +84,10 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +112,12 @@
     <Compile Include="VlcMedia.cs" />
     <Compile Include="VlcMediaPlayer.cs" />
     <Compile Include="VlcState.cs" />
+    <Compile Include="VolumeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="VolumeControl.Designer.cs">
+      <DependentUpon>VolumeControl.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -123,6 +131,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="VolumeControl.resx">
+      <DependentUpon>VolumeControl.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">

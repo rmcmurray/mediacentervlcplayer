@@ -39,7 +39,7 @@ namespace MediaCenterVLCPlayer
 
         public void MediaPlayerEnded(ref VlcEventType type, IntPtr userdata)
         {
-            Form1.Closeapp();
+            Form1.Instance.Closeapp();
         }
     }
 }

@@ -33,11 +33,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
@@ -45,8 +51,15 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LoggerTest.cs" />
+    <Compile Include="MCRemoteControlManagerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VlcMediaClass.cs" />
+    <Compile Include="SettingsControllerTest.cs" />
+    <Compile Include="VlcEventManagerTest.cs" />
+    <Compile Include="VlcExceptionTest.cs" />
+    <Compile Include="VlcInstanceTest.cs" />
+    <Compile Include="VlcMediaPlayerTest.cs" />
+    <Compile Include="VlcMediaTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Test Files\n900_extremely_short.avi" />
@@ -57,6 +70,12 @@
       <Project>{A701E973-1957-4975-89FC-6E8A938ADAB9}</Project>
       <Name>MediaCenterVLCPlayer</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Shadow Include="Test References\MediaCenterVLCPlayer.accessor" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestSetupScript.bat" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

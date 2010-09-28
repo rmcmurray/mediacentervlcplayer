@@ -1,15 +1,18 @@
-﻿using System;
-using System.Text;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using MediaCenterVLCPlayer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MediaCenterVLCPlayer;
+using System;
+using System.Collections;
 
 namespace MediaCenterVLCPlayerTestSuite
 {
-    [TestClass]
-    public class VlcMediaClass
+    
+    
+    /// <summary>
+    ///This is a test class for VlcMediaTest and is intended
+    ///to contain all VlcMediaTest Unit Tests
+    ///</summary>
+    [TestClass()]
+    public class VlcMediaTest
     {
         public string BaseTestFilePath = @"..\..\..\MediaCenterVLCPlayerTestSuite\Test Files\";
         public string[] VlcInstanceArgs = new string[] {
@@ -17,8 +20,60 @@ namespace MediaCenterVLCPlayerTestSuite
                 @"--plugin-path=" + MediaCenterVLCPlayer.Properties.Settings.Default.VlcPluginsPath
             };
 
-        [TestMethod]
-        public void BaseTest()
+        private TestContext testContextInstance;
+
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext
+        {
+            get
+            {
+                return testContextInstance;
+            }
+            set
+            {
+                testContextInstance = value;
+            }
+        }
+
+        #region Additional test attributes
+        // 
+        //You can use the following additional attributes as you write your tests:
+        //
+        //Use ClassInitialize to run code before running the first test in the class
+        //[ClassInitialize()]
+        //public static void MyClassInitialize(TestContext testContext)
+        //{
+        //}
+        //
+        //Use ClassCleanup to run code after all tests in a class have run
+        //[ClassCleanup()]
+        //public static void MyClassCleanup()
+        //{
+        //}
+        //
+        //Use TestInitialize to run code before running each test
+        //[TestInitialize()]
+        //public void MyTestInitialize()
+        //{
+        //}
+        //
+        //Use TestCleanup to run code after each test has run
+        //[TestCleanup()]
+        //public void MyTestCleanup()
+        //{
+        //}
+        //
+        #endregion
+
+
+        /// <summary>
+        ///A test for VlcMedia Constructor
+        ///</summary>
+        [TestMethod()]
+        public void VlcMediaConstructorTest()
         {
             VlcInstance instance = null;
             VlcMediaPlayer player = null;
@@ -29,19 +84,28 @@ namespace MediaCenterVLCPlayerTestSuite
             Assert.AreEqual(player.Media.Length, 5000);
             player.Stop();
             player.Dispose();
+        }
 
-            player = instance.CreatePlayer(BaseTestFilePath + "trn_anaglyph_adj.mpg");
-            Assert.IsInstanceOfType(player, typeof(VlcMediaPlayer));
+        /// <summary>
+        ///A test for AspectRatio
+        ///</summary>
+        [TestMethod()]
+        public void AspectRatioTest()
+        {
+            VlcInstance instance = new VlcInstance(VlcInstanceArgs);
+            VlcMediaPlayer player = instance.CreatePlayer(BaseTestFilePath + "n900_extremely_short.avi");
             player.Play();
-            Assert.AreEqual(player.Media.Length, 6113);
+            Assert.AreEqual("1.66", player.Media.AspectRatio);
             player.Stop();
             player.Dispose();
-
             instance.Dispose();
         }
 
-        [TestMethod]
-        public void TestAudioTracks()
+        /// <summary>
+        ///A test for AudioTracks
+        ///</summary>
+        [TestMethod()]
+        public void AudioTracksTest()
         {
             VlcInstance instance = null;
             VlcMediaPlayer player = null;
@@ -57,8 +121,31 @@ namespace MediaCenterVLCPlayerTestSuite
             instance.Dispose();
         }
 
-        [TestMethod]
-        public void TestSubtitles()
+        /// <summary>
+        ///A test for Length
+        ///</summary>
+        [TestMethod()]
+        public void LengthTest()
+        {
+            VlcInstance instance = null;
+            VlcMediaPlayer player = null;
+            instance = new VlcInstance(VlcInstanceArgs);
+            player = instance.CreatePlayer(BaseTestFilePath + "mewmew-vorbis-ssa.mkv");
+            Assert.IsInstanceOfType(player, typeof(VlcMediaPlayer));
+            player.Play();
+            Assert.AreEqual(player.Media.Length, 58183);
+
+            player.Stop();
+            player.Dispose();
+
+            instance.Dispose();
+        }
+
+        /// <summary>
+        ///A test for SubtitleTracks
+        ///</summary>
+        [TestMethod()]
+        public void SubtitleTracksTest()
         {
             VlcInstance instance = null;
             VlcMediaPlayer player = null;
@@ -110,5 +197,20 @@ namespace MediaCenterVLCPlayerTestSuite
 
             instance.Dispose();
         }
+
+        /// <summary>
+        ///A test for TrackCount
+        ///</summary>
+        /*
+        [TestMethod()]
+        public void TrackCountTest()
+        {
+            IntPtr handle = new IntPtr(); // TODO: Initialize to an appropriate value
+            VlcMedia target = new VlcMedia(handle); // TODO: Initialize to an appropriate value
+            int actual;
+            actual = target.TrackCount;
+            Assert.Inconclusive("Verify the correctness of this test method.");
+        }
+        */
     }
 }
