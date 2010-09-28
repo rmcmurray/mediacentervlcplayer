@@ -26,7 +26,13 @@ namespace MediaCenterVLCPlayer
         private int _currentAudioTrack;
         private int _currentAspectRatio;
         private String _currentAudioOutput;
+        private VlcMediaPlayer _player;
 
+        public VlcMediaPlayer Player
+        {
+            get { return _player; }
+            set { _player = value; }
+        }
 
         public String CurrentAudioOutput
         {
@@ -107,7 +113,7 @@ namespace MediaCenterVLCPlayer
 
                 // current video aspect ratio
                 int i = 0;
-                _aspectRations.Add(i++, VlcMedia.Instance.AspectRatio);
+                _aspectRations.Add(i++, _player.Media.AspectRatio);
                 _aspectRations.Add(i++, VLCLib.AspectRatio.FullScreen);
                 _aspectRations.Add(i++, VLCLib.AspectRatio.WideScreen);
                 _aspectRations.Add(i++, VLCLib.AspectRatio.DVD);
@@ -138,7 +144,7 @@ namespace MediaCenterVLCPlayer
             {
                 try
                 {
-                    VLCLib.libvlc_audio_output_set_device_type(VlcMediaPlayer.Handle,
+                    VLCLib.libvlc_audio_output_set_device_type(_player.Handle,
                         MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioDeviceId);
                     CurrentAudioOutputDeviceId = MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioDeviceId;
                 }
@@ -152,7 +158,7 @@ namespace MediaCenterVLCPlayer
             {
                 try
                 {
-                    VLCLib.libvlc_audio_set_channel(VlcMediaPlayer.Handle,
+                    VLCLib.libvlc_audio_set_channel(_player.Handle,
                         MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioChannelsId);
                     CurrentAudioChannelId = MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioChannelsId;
                 }
@@ -167,14 +173,14 @@ namespace MediaCenterVLCPlayer
         public void SyncMenu()
         {
             // activate the current audio channels
-            int currentId = VLCLib.libvlc_audio_get_channel(VlcMediaPlayer.Handle);
+            int currentId = VLCLib.libvlc_audio_get_channel(_player.Handle);
             CurrentAudioChannelId = currentId;
             SetCurrentActiveMenuItem(Form1.Instance.audioChannelsToolStripMenuItem, Form1.Instance.audioChannelsToolStripMenuItem.DropDownItems[currentId].Name);
 
             // sync the Audio Tracks menu
             Logger.WriteToLog("Syncing Audio Tracks menu");
             ToolStripMenuItem audioTracksMenuItem = Form1.Instance.audioTracksToolStripMenuItem;
-            ArrayList _audioTracks = VlcMedia.Instance.AudioTracks;
+            ArrayList _audioTracks = _player.Media.AudioTracks;
             for (int a = 0; a < _audioTracks.Count; a++)
             {
                 VLCLib.libvlc_track_description_t audioTrack = (VLCLib.libvlc_track_description_t)_audioTracks[a];
@@ -185,7 +191,7 @@ namespace MediaCenterVLCPlayer
                 aItem.Click += new EventHandler(aItem_Click);
                 audioTracksMenuItem.DropDownItems.Add(aItem);
             }
-            SetCurrentActiveMenuItem(audioTracksMenuItem, VLCLib.libvlc_audio_get_track(VlcMediaPlayer.Handle).ToString());
+            SetCurrentActiveMenuItem(audioTracksMenuItem, VLCLib.libvlc_audio_get_track(_player.Handle).ToString());
 
             // sync the Audio Outputs menu
             Logger.WriteToLog("Syncing sound outputs menu");
@@ -224,7 +230,7 @@ namespace MediaCenterVLCPlayer
             // sync the Audio Subtitles menu
             Logger.WriteToLog("Syncing subtitles menu");
             ToolStripMenuItem subtitlesMenuItem = Form1.Instance.subtitlesToolStripMenuItem;
-            ArrayList _subtitleTracks = VlcMedia.Instance.SubtitleTracks;
+            ArrayList _subtitleTracks = _player.Media.SubtitleTracks;
             for (int j = 0; j < _subtitleTracks.Count; j++)
             {
                 VLCLib.libvlc_track_description_t subtitleTrack = (VLCLib.libvlc_track_description_t)_subtitleTracks[j];
@@ -261,7 +267,7 @@ namespace MediaCenterVLCPlayer
         {
             string newRatio = ((ToolStripMenuItem)sender).Text;
             Logger.WriteToLog("Changing Aspect Ratio to " + newRatio);
-            VLCLib.libvlc_video_set_aspect_ratio(VlcMediaPlayer.Handle, newRatio);
+            VLCLib.libvlc_video_set_aspect_ratio(_player.Handle, newRatio);
             int newValue = Form1.Instance.aspectRatioToolStripMenuItem.DropDownItems.IndexOf((ToolStripMenuItem)sender);
             CurrentAspectRatio = newValue;
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
@@ -272,7 +278,7 @@ namespace MediaCenterVLCPlayer
         {
             string id = ((ToolStripMenuItem)sender).Name;
             Logger.WriteToLog("Chaning Audio Track to: " + ((ToolStripMenuItem)sender).Text);
-            VLCLib.libvlc_audio_set_track(VlcMediaPlayer.Handle, Convert.ToInt32(id));
+            VLCLib.libvlc_audio_set_track(_player.Handle, Convert.ToInt32(id));
             CurrentAudioTrack = Convert.ToInt32(id);
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, id);
@@ -282,7 +288,7 @@ namespace MediaCenterVLCPlayer
         {
             string name = ((ToolStripMenuItem)sender).Text;
             Logger.WriteToLog("Changing Audio Output to: " + name);
-            VLCLib.libvlc_audio_output_set(VlcMediaPlayer.Handle, name);
+            VLCLib.libvlc_audio_output_set(_player.Handle, name);
             CurrentAudioOutput = name;
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, name);
@@ -297,10 +303,10 @@ namespace MediaCenterVLCPlayer
             String audioOutputName = parentItem.Name;
 
             Logger.WriteToLog("Changing Audio Output to: " + audioOutputName);
-            VLCLib.libvlc_audio_output_set(VlcMediaPlayer.Handle, audioOutputName);
+            VLCLib.libvlc_audio_output_set(_player.Handle, audioOutputName);
             CurrentAudioOutput = audioOutputName;
             Logger.WriteToLog("Changing Audio Output Device to: " + menuItem.Text);
-            VLCLib.libvlc_audio_output_device_set(VlcMediaPlayer.Handle, audioOutputName, deviceId);
+            VLCLib.libvlc_audio_output_device_set(_player.Handle, audioOutputName, deviceId);
             CurrentAudioOutputDeviceId = Convert.ToInt32(deviceId);
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, deviceId);
@@ -310,7 +316,7 @@ namespace MediaCenterVLCPlayer
         {
             string id = ((ToolStripMenuItem)sender).Name;
             Logger.WriteToLog("Changing Subtitle track to: " + ((ToolStripMenuItem)sender).Text);
-            VLCLib.libvlc_video_set_spu(VlcMediaPlayer.Handle, Convert.ToUInt32(id));
+            VLCLib.libvlc_video_set_spu(_player.Handle, Convert.ToUInt32(id));
             CurrentSubtitleTrackId = Convert.ToInt32(id);
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, id.ToString());
@@ -326,73 +332,73 @@ namespace MediaCenterVLCPlayer
             Form1.Instance.Refresh();
         }
 
-        public static void seventPointOneToolStripMenuItem_Click(object sender, EventArgs e)
+        public void seventPointOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VLCLib.libvlc_audio_output_set_device_type(VlcMediaPlayer.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_7_1);
+            VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_7_1);
             SettingsController.Instance.CurrentAudioOutputDeviceId = (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_7_1;
             SettingsController.Instance.SetCurrentActiveMenuItem(
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
 
-        public static void sixPointOneToolStripMenuItem_Click(object sender, EventArgs e)
+        public void sixPointOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VLCLib.libvlc_audio_output_set_device_type(VlcMediaPlayer.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_6_1);
+            VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_6_1);
             SettingsController.Instance.CurrentAudioOutputDeviceId = (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_6_1;
             SettingsController.Instance.SetCurrentActiveMenuItem(
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
 
-        public static void fivePointOneToolStripMenuItem_Click(object sender, EventArgs e)
+        public void fivePointOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VLCLib.libvlc_audio_output_set_device_type(VlcMediaPlayer.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_5_1);
+            VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_5_1);
             SettingsController.Instance.CurrentAudioOutputDeviceId = (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_5_1;
             SettingsController.Instance.SetCurrentActiveMenuItem(
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
 
-        public static void stereoToolStripMenuItem_Click(object sender, EventArgs e)
+        public void stereoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VLCLib.libvlc_audio_output_set_device_type(VlcMediaPlayer.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Stereo);
+            VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Stereo);
             SettingsController.Instance.CurrentAudioOutputDeviceId = (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Stereo;
             SettingsController.Instance.SetCurrentActiveMenuItem(
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
 
-        public static void monoToolStripMenuItem_Click(object sender, EventArgs e)
+        public void monoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VLCLib.libvlc_audio_output_set_device_type(VlcMediaPlayer.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Mono);
+            VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Mono);
             SettingsController.Instance.CurrentAudioOutputDeviceId = (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Mono;
             SettingsController.Instance.SetCurrentActiveMenuItem(
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
 
-        public static void spdifToolStripMenuItem_Click(object sender, EventArgs e)
+        public void spdifToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VLCLib.libvlc_audio_output_set_device_type(VlcMediaPlayer.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_SPDIF);
+            VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_SPDIF);
             SettingsController.Instance.CurrentAudioOutputDeviceId = (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_SPDIF;
             SettingsController.Instance.SetCurrentActiveMenuItem(
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
 
-        public static void saveAsDefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        public void saveAsDefaultToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
-            int audioChannelId = VLCLib.libvlc_audio_get_channel(VlcMediaPlayer.Handle);
-            int audioDeviceId = VLCLib.libvlc_audio_output_get_device_type(VlcMediaPlayer.Handle);
+            int audioChannelId = VLCLib.libvlc_audio_get_channel(_player.Handle);
+            int audioDeviceId = VLCLib.libvlc_audio_output_get_device_type(_player.Handle);
             SettingsController.Instance.SaveSettings();
         }
 
-        public static void disabledToolStripMenuItem_Click(object sender, EventArgs e)
+        public void disabledToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (VlcMedia.Instance.SubtitleTracks.Count > 0)
+            if (_player.Media.SubtitleTracks.Count > 0)
             {
-                VLCLib.libvlc_video_set_spu(VlcMediaPlayer.Handle, 0);
+                VLCLib.libvlc_video_set_spu(_player.Handle, 0);
                 SettingsController.Instance.CurrentSubtitleTrackId = 0;
                 ToolStripMenuItem disabledItem = (ToolStripMenuItem)Form1.Instance.subtitlesToolStripMenuItem.DropDownItems[0];
                 disabledItem.Checked = true;

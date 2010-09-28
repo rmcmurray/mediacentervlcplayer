@@ -4,8 +4,9 @@ namespace MediaCenterVLCPlayer
 {
     public class VlcInstance : IDisposable
     {
-        public static IntPtr Handle;
-        private VlcMediaPlayer _player;
+        public IntPtr Handle;
+        private VlcMediaPlayer _player = null;
+        private Logger _logger = null;
 
         public VlcMediaPlayer Player
         {
@@ -15,13 +16,16 @@ namespace MediaCenterVLCPlayer
 
         public VlcInstance(string[] args)
         {
-            VlcInstance.Handle = VLCLib.libvlc_new(args.Length, args);
-            if (VlcInstance.Handle == IntPtr.Zero) throw new VlcException();
+            Handle = VLCLib.libvlc_new(args.Length, args);
+            if (Handle == IntPtr.Zero) throw new VlcException();
+            _logger = new Logger();
         }
 
         public void Dispose()
         {
-            VLCLib.libvlc_release(VlcInstance.Handle);
+            VLCLib.libvlc_release(Handle);
+            if (_logger != null)
+                _logger.Close();
         }
 
         public VlcMediaPlayer CreatePlayer(string mediaPath)
@@ -52,7 +56,7 @@ namespace MediaCenterVLCPlayer
             }
 
 
-            VlcMediaPlayer player = new VlcMediaPlayer(media);
+            VlcMediaPlayer player = new VlcMediaPlayer(this, media);
             if (player != null) {
                 _player = player;
             }

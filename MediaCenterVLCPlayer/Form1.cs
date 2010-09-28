@@ -16,11 +16,9 @@ namespace MediaCenterVLCPlayer
         VlcMediaPlayer player;
         VlcEventManager eventmanager;
         public SettingsController settings;
-        Logger myLogger;
 
         public Form1(string mediafile)
         {
-            myLogger = new Logger();
             InitializeComponent();
             Form1.Instance = this;
             // set window location/sizing and force to top of z index
@@ -31,7 +29,6 @@ namespace MediaCenterVLCPlayer
             this.Refresh();
 
             // activate the remote control hooks
-            myLogger.writeToLog("Creating new RemoteControlManager");
             remoteManager = new MCRemoteControlManager();
             remoteManager.form = this;
             remoteManager.AssignHandle(this.Handle);
@@ -44,80 +41,64 @@ namespace MediaCenterVLCPlayer
             };
 
             // init VLC
-            myLogger.writeToLog("Creating instance of VLC");
-            instance = new VlcInstance(args);
-            IntPtr logger = VLCLib.libvlc_log_open(VlcInstance.Handle);
-            VLCLib.libvlc_set_log_verbosity(VlcInstance.Handle, 10);
+            try
+            {
+                instance = new VlcInstance(args);
+            }
+            catch (VlcException e)
+            {
 
-            myLogger.writeToLog("Creating instance of VLC Media Player");
+            }
+
+            IntPtr logger = VLCLib.libvlc_log_open(instance.Handle);
+            VLCLib.libvlc_set_log_verbosity(instance.Handle, 10);
+
             player = instance.CreatePlayer(mediafile);
             player.Drawable = panelHandle;
             // give the remote control lib access to the active panel so it gets keyboard/mouse/remote events
-            remoteManager.playerHandle = VlcMediaPlayer.Handle;
+            remoteManager.playerHandle = player.Handle;
 
-            myLogger.writeToLog("Activating event manager on VLC Media Player");
-            IntPtr p_event_manager = VLCLib.libvlc_media_player_event_manager(VlcMediaPlayer.Handle);
+            IntPtr p_event_manager = VLCLib.libvlc_media_player_event_manager(player.Handle);
             eventmanager = new VlcEventManager(p_event_manager);
             eventmanager.InitalizeEvents();
-            myLogger.writeToLog("Setting media to play");
         }
 
         public void PlayMedia()
         {
             player.Play();
-            System.Threading.Thread.Sleep(1 * 1000);
-            while (VLCLib.libvlc_media_player_is_playing(VlcMediaPlayer.Handle) < 1)
+            while (VLCLib.libvlc_media_player_is_playing(player.Handle) < 1)
             {
                 System.Threading.Thread.Sleep(1 * 100);
             }
-            myLogger.writeToLog("Loading settings now that the media is playing");
             // activate the settings controller
             settings = new SettingsController();
+            settings.Player = player;
             settings.LoadSettings();
-            myLogger.writeToLog("Syncing settings menu");
             settings.SyncMenu();
-            myLogger.writeToLog("Loading default settings");
             settings.ApplyDefaultSettings();
         }
 
-        public static void Closeapp()
+        public void Closeapp()
         {
-            if (VLCLib.libvlc_media_player_is_playing(VlcMediaPlayer.Handle) > 0)
+            if (VLCLib.libvlc_media_player_is_playing(player.Handle) > 0)
             {
-                VLCLib.libvlc_media_player_stop(VlcMediaPlayer.Handle);
+                VLCLib.libvlc_media_player_stop(player.Handle);
             }
 
-            if (VlcMediaPlayer.Handle != IntPtr.Zero)
+            if (player.Handle != IntPtr.Zero)
             {
-                VLCLib.libvlc_media_release(VlcMedia.Handle);
+                VLCLib.libvlc_media_release(player.Media.Handle);
             }
 
-            if (VlcInstance.Handle != IntPtr.Zero)
+            if (instance != null && instance.Handle != IntPtr.Zero)
             {
-                VLCLib.libvlc_release(VlcInstance.Handle);
+                VLCLib.libvlc_release(instance.Handle);
             }
 
             if (Logger.Instance != null)
                 Logger.Instance.Close();
 
             Environment.Exit(0);
-        }
-
-        public static void WriteMarquee(string text, int opacity, int fontsize, Color color, int timeout)
-        {
-            VLCLib.libvlc_video_set_marquee_string(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_Text, text);
-            VLCLib.libvlc_video_set_marquee_int(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_Opacity, opacity);
-            VLCLib.libvlc_video_set_marquee_int(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_Size, fontsize);
-            VLCLib.libvlc_video_set_marquee_int(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_X, 50);
-            VLCLib.libvlc_video_set_marquee_int(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_Y, 20);
-            VLCLib.libvlc_video_set_marquee_int(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_Color, color.ToArgb() & 0x00ffffff);
-            VLCLib.libvlc_video_set_marquee_int(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_Timeout, timeout);
-            VLCLib.libvlc_video_set_marquee_int(VlcMediaPlayer.Handle, (uint)VLCLib.libvlc_video_marquee_option_t.libvlc_marquee_Enable, 1);
-        }
-
-        public static void WriteMarquee(string text)
-        {
-            WriteMarquee(text, 100, 40, Color.White, 500);
         }
     }
 }

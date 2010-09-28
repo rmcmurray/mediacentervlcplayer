@@ -7,8 +7,8 @@ namespace MediaCenterVLCPlayer
 {
     public class VlcMedia : IDisposable
     {
-        public static IntPtr Handle;
-        public static VlcMedia Instance;
+        public IntPtr Handle;
+        private VlcInstance _instance;
         private ArrayList _subtitleTracks;
         private ArrayList _audioTracks;
         private string _defaultAspectRatio;
@@ -22,8 +22,8 @@ namespace MediaCenterVLCPlayer
             try
             {
                 _subtitleTracks = new ArrayList();
-                int subCount = VLCLib.libvlc_video_get_spu_count(VlcMediaPlayer.Handle);
-                IntPtr p_first_track = VLCLib.libvlc_video_get_spu_description(VlcMediaPlayer.Handle);
+                int subCount = VLCLib.libvlc_video_get_spu_count(_instance.Player.Handle);
+                IntPtr p_first_track = VLCLib.libvlc_video_get_spu_description(_instance.Player.Handle);
                 IntPtr p_track = p_first_track;
                 for (int i = 0; i < subCount; i++)
                 {
@@ -49,8 +49,8 @@ namespace MediaCenterVLCPlayer
             try
             {
                 _audioTracks = new ArrayList();
-                int subCount = VLCLib.libvlc_audio_get_track_count(VlcMediaPlayer.Handle);
-                IntPtr p_first_track = VLCLib.libvlc_audio_get_track_description(VlcMediaPlayer.Handle);
+                int subCount = VLCLib.libvlc_audio_get_track_count(_instance.Player.Handle);
+                IntPtr p_first_track = VLCLib.libvlc_audio_get_track_description(_instance.Player.Handle);
                 IntPtr p_track = p_first_track;
                 for (int i = 0; i < subCount; i++)
                 {
@@ -69,19 +69,18 @@ namespace MediaCenterVLCPlayer
                 Logger.WriteToLog("Error loading audio tracks: " + e.Message);
             }
         }
-        internal VlcMedia(IntPtr handle)
-        {
-            VlcMedia.Handle = handle;
+        internal VlcMedia(IntPtr handle) {
+            Handle = handle;
         }
 
         public VlcMedia(VlcInstance instance, string path)
         {
-            VlcMedia.Instance = this;
+            _instance = instance;
             _defaultAspectRatio = string.Empty;
             _currentAspectRatio = string.Empty;
 
-            VlcMedia.Handle = VLCLib.libvlc_media_new_path(VlcInstance.Handle, path);
-            if (VlcMedia.Handle == IntPtr.Zero)
+            Handle = VLCLib.libvlc_media_new_path(instance.Handle, path);
+            if (Handle == IntPtr.Zero)
             {
                 return;
             }
@@ -95,15 +94,32 @@ namespace MediaCenterVLCPlayer
         }
         public void Dispose()
         {
-            VLCLib.libvlc_media_release(VlcMedia.Handle);
+            VLCLib.libvlc_media_release(Handle);
         }
         public long Length
         {
-            get { return VLCLib.libvlc_media_player_get_length(VlcMediaPlayer.Handle); }
+            get { return VLCLib.libvlc_media_player_get_length(_instance.Player.Handle); }
+        }
+        public long Time
+        {
+            get { return VLCLib.libvlc_media_player_get_time(Handle); }
+            set { VLCLib.libvlc_media_player_set_time(Handle, value); }
+        }
+        public float Position
+        {
+            get
+            {
+                long time = VLCLib.libvlc_media_player_get_time(Handle);
+                return VLCLib.libvlc_media_player_get_position(Handle, time);
+            }
+            set
+            {
+                VLCLib.libvlc_media_player_set_position(Handle, value);
+            }
         }
         public int TrackCount
         {
-            get { return VLCLib.libvlc_audio_get_track_count(VlcMediaPlayer.Handle); }
+            get { return VLCLib.libvlc_audio_get_track_count(_instance.Player.Handle); }
         }
         public string AspectRatio
         {
@@ -115,7 +131,7 @@ namespace MediaCenterVLCPlayer
                     // current video aspect ratio
                     int i = 0;
                     uint w = 0, h = 0;
-                    VLCLib.libvlc_video_get_size(VlcMediaPlayer.Handle, 0, ref w, ref h);
+                    VLCLib.libvlc_video_get_size(_instance.Player.Handle, 0, ref w, ref h);
                     float width = (float)Convert.ToDecimal(w);
                     float height = (float)Convert.ToDecimal(h);
                     if (width > 0.0 && height > 0.0)
@@ -124,13 +140,14 @@ namespace MediaCenterVLCPlayer
                         if (currentRatio.Length > 4)
                             currentRatio = currentRatio.Substring(0, 4);
                         _defaultAspectRatio = currentRatio;
+                        _currentAspectRatio = _defaultAspectRatio;
                     }
                 }
-                return _currentAspectRatio == string.Empty ? _defaultAspectRatio : _currentAspectRatio;
+                return _currentAspectRatio;
             }
             set
             {
-                VLCLib.libvlc_video_set_aspect_ratio(VlcMediaPlayer.Handle, value);
+                VLCLib.libvlc_video_set_aspect_ratio(_instance.Player.Handle, value);
             }
         }
         public ArrayList SubtitleTracks

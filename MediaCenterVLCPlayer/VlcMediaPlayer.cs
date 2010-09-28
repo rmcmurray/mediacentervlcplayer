@@ -12,21 +12,23 @@ namespace MediaCenterVLCPlayer
         private ArrayList _audioOutputs;
         private ArrayList _audioOutputDevices;
         private ArrayList _aspectRatios;
-        public static IntPtr Handle;
+        public IntPtr Handle;
         private IntPtr drawable;
         private bool playing, paused;
-        private VlcMedia media;
+        private VlcMedia _media;
+        private VlcInstance _instance;
 
-        public VlcMediaPlayer(VlcMedia media)
+        public VlcMediaPlayer(VlcInstance instance, VlcMedia media)
         {
-            this.media = media;
-            VlcMediaPlayer.Handle = VLCLib.libvlc_media_player_new_from_media(VlcMedia.Handle);
-            if (VlcMediaPlayer.Handle == IntPtr.Zero) throw new VlcException();
+            this._instance = instance;
+            this._media = media;
+            Handle = VLCLib.libvlc_media_player_new_from_media(media.Handle);
+            if (Handle == IntPtr.Zero) throw new VlcException();
         }
 
         public void Dispose()
         {
-            VLCLib.libvlc_media_player_release(VlcMediaPlayer.Handle);
+            VLCLib.libvlc_media_player_release(Handle);
         }
 
         public IntPtr Drawable
@@ -34,7 +36,7 @@ namespace MediaCenterVLCPlayer
             get { return drawable; }
             set
             {
-                VLCLib.libvlc_media_player_set_hwnd(VlcMediaPlayer.Handle, value);
+                VLCLib.libvlc_media_player_set_hwnd(Handle, value);
                 drawable = value;
             }
         }
@@ -43,13 +45,13 @@ namespace MediaCenterVLCPlayer
         {
             get
             {
-                if (media == null)
+                if (_media == null)
                 {
                     IntPtr mediaHandle = VLCLib.libvlc_media_player_get_media(Handle);
                     if (mediaHandle == IntPtr.Zero) return null;
-                    media = new VlcMedia(mediaHandle);
+                    _media = new VlcMedia(mediaHandle);
                 }
-                return media;
+                return _media;
             }
         }
 
@@ -64,7 +66,7 @@ namespace MediaCenterVLCPlayer
 
             while (VLCLib.libvlc_media_player_is_playing(Handle) < 1)
             {
-                System.Threading.Thread.Sleep(1 * 100);
+                System.Threading.Thread.Sleep(1 * 1000);
             }
             Media.LoadMediaMetaData();
         }
@@ -75,7 +77,7 @@ namespace MediaCenterVLCPlayer
 
         public void Pause()
         {
-            VLCLib.libvlc_media_player_pause(VlcMediaPlayer.Handle);
+            VLCLib.libvlc_media_player_pause(Handle);
 
             if (playing)
                 paused ^= true;
@@ -83,7 +85,7 @@ namespace MediaCenterVLCPlayer
 
         public void Stop()
         {
-            VLCLib.libvlc_media_player_stop(VlcMediaPlayer.Handle);
+            VLCLib.libvlc_media_player_stop(Handle);
 
             playing = false;
             paused = false;
@@ -93,11 +95,11 @@ namespace MediaCenterVLCPlayer
         {
             get
             {
-                return VLCLib.libvlc_audio_get_volume(VlcMediaPlayer.Handle);
+                return VLCLib.libvlc_audio_get_volume(Handle);
             }
             set
             {
-                VLCLib.libvlc_audio_set_volume(VlcMediaPlayer.Handle, value);
+                VLCLib.libvlc_audio_set_volume(Handle, value);
             }
         }
 
@@ -107,13 +109,13 @@ namespace MediaCenterVLCPlayer
             try
             {
                 _audioOutputs = new ArrayList();
-                IntPtr pOutputs = VLCLib.libvlc_audio_output_list_get(VlcInstance.Handle);
+                IntPtr pOutputs = VLCLib.libvlc_audio_output_list_get(_instance.Handle);
                 if (pOutputs != IntPtr.Zero)
                 {
                     int i = 0;
                     VLCLib.libvlc_audio_output_t output = (VLCLib.libvlc_audio_output_t)Marshal.PtrToStructure(pOutputs, typeof(VLCLib.libvlc_audio_output_t));
                     Logger.WriteToLog("Audio Output: " + output.psz_name);
-                    int deviceCount = VLCLib.libvlc_audio_output_device_count(VlcInstance.Handle, output.psz_name);
+                    int deviceCount = VLCLib.libvlc_audio_output_device_count(_instance.Handle, output.psz_name);
                     Logger.WriteToLog("Found " + deviceCount.ToString() + " output devices for " + output.psz_name);
                     if (deviceCount > 0)
                         _audioOutputs.Add(new AudioOutput(output));
@@ -124,7 +126,7 @@ namespace MediaCenterVLCPlayer
                         output = (VLCLib.libvlc_audio_output_t)Marshal.PtrToStructure(output.p_next,
                             typeof(VLCLib.libvlc_audio_output_t));
                         Logger.WriteToLog("Audio Output: " + output.psz_name);
-                        int mdeviceCount = VLCLib.libvlc_audio_output_device_count(VlcInstance.Handle, output.psz_name);
+                        int mdeviceCount = VLCLib.libvlc_audio_output_device_count(_instance.Handle, output.psz_name);
                         Logger.WriteToLog("Found " + mdeviceCount.ToString() + " output devices for " + output.psz_name);
                         if (mdeviceCount > 0)
                             _audioOutputs.Add(new AudioOutput(output));
@@ -179,9 +181,9 @@ namespace MediaCenterVLCPlayer
 
         public bool ChangeSubtitleTrack(int trackIndex)
         {
-            if (trackIndex <= media.SubtitleTracks.Count - 1)
+            if (trackIndex <= _media.SubtitleTracks.Count - 1)
             {
-                VLCLib.libvlc_track_description_t subtitleTrack = (VLCLib.libvlc_track_description_t)media.SubtitleTracks[trackIndex];
+                VLCLib.libvlc_track_description_t subtitleTrack = (VLCLib.libvlc_track_description_t)_media.SubtitleTracks[trackIndex];
                 VLCLib.libvlc_video_set_spu(Handle, subtitleTrack.i_id);
                 return true;
             }

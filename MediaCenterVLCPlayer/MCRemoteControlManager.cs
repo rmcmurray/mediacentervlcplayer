@@ -58,16 +58,16 @@ namespace MediaCenterVLCPlayer
                 switch (iChar)
                 {
                     case (int)RemoteKeys.APPCOMMAND_MEDIA_PAUSE:
-                        VLCLib.libvlc_media_player_pause(VlcMediaPlayer.Handle);
-                        Form1.WriteMarquee("Pause");
+                        VLCLib.libvlc_media_player_pause(playerHandle);
+//                        Form1.WriteMarquee("Pause");
                         lastiChar = (int)RemoteKeys.APPCOMMAND_MEDIA_PAUSE;
                         return;
                     case (int)RemoteKeys.APPCOMMAND_MEDIA_PLAY_PAUSE:
-                        VLCLib.libvlc_media_player_pause(VlcMediaPlayer.Handle);
+                        VLCLib.libvlc_media_player_pause(playerHandle);
                         lastiChar = (int)RemoteKeys.APPCOMMAND_MEDIA_PLAY_PAUSE;
                         return;
                     case (int)RemoteKeys.APPCOMMAND_MEDIA_FAST_FORWARD:
-                        if (VLCLib.libvlc_media_player_is_seekable(VlcMediaPlayer.Handle) > 0)
+                        if (VLCLib.libvlc_media_player_is_seekable(playerHandle) > 0)
                         {
                             VLCLib.libvlc_media_player_set_time(playerHandle, VLCLib.libvlc_media_player_get_time(playerHandle)
                                 + MilliSecondsFromSettings(Properties.Settings.Default.SecondsForFastForward));
@@ -75,7 +75,7 @@ namespace MediaCenterVLCPlayer
                         lastiChar = (int)RemoteKeys.APPCOMMAND_MEDIA_FAST_FORWARD;
                         return;
                     case (int)RemoteKeys.APPCOMMAND_MEDIA_REWIND:
-                        if (VLCLib.libvlc_media_player_is_seekable(VlcMediaPlayer.Handle) > 0)
+                        if (VLCLib.libvlc_media_player_is_seekable(playerHandle) > 0)
                         {
                             VLCLib.libvlc_media_player_set_time(playerHandle, VLCLib.libvlc_media_player_get_time(playerHandle)
                                 - MilliSecondsFromSettings(Properties.Settings.Default.SecondsForFastForward));
@@ -83,7 +83,7 @@ namespace MediaCenterVLCPlayer
                         lastiChar = (int)RemoteKeys.APPCOMMAND_MEDIA_REWIND;
                         return;
                     case (int)RemoteKeys.APPCOMMAND_MEDIA_PLAY:
-                        VLCLib.libvlc_media_player_play(VlcMediaPlayer.Handle);
+                        VLCLib.libvlc_media_player_play(playerHandle);
                         lastiChar = (int)RemoteKeys.APPCOMMAND_MEDIA_PLAY;
                         return;
                     default:
@@ -98,11 +98,11 @@ namespace MediaCenterVLCPlayer
                 switch (iChar)
                 {
                     case (int)RemoteKeys.WM_STOP:
-                        VLCLib.libvlc_media_player_stop(VlcMediaPlayer.Handle);
+                        VLCLib.libvlc_media_player_stop(playerHandle);
                         lastiChar = (int)RemoteKeys.WM_STOP;
                         return;
                     case (int)RemoteKeys.WM_PREVIOUS:
-                        if (VLCLib.libvlc_media_player_is_seekable(VlcMediaPlayer.Handle) > 0)
+                        if (VLCLib.libvlc_media_player_is_seekable(playerHandle) > 0)
                         {
                             VLCLib.libvlc_media_player_set_time(playerHandle, VLCLib.libvlc_media_player_get_time(playerHandle)
                                 - MilliSecondsFromSettings(Properties.Settings.Default.SecondsForFastForward));
@@ -110,7 +110,7 @@ namespace MediaCenterVLCPlayer
                         lastiChar = (int)RemoteKeys.WM_PREVIOUS;
                         return;
                     case (int)RemoteKeys.WM_NEXT:
-                        if (VLCLib.libvlc_media_player_is_seekable(VlcMediaPlayer.Handle) > 0)
+                        if (VLCLib.libvlc_media_player_is_seekable(playerHandle) > 0)
                         {
                             VLCLib.libvlc_media_player_set_time(playerHandle, VLCLib.libvlc_media_player_get_time(playerHandle)
                                 + MilliSecondsFromSettings(Properties.Settings.Default.SecondsForFastForward));
@@ -118,7 +118,7 @@ namespace MediaCenterVLCPlayer
                         lastiChar = (int)RemoteKeys.WM_NEXT;
                         return;
                     case (int)RemoteKeys.WM_FORWARD:
-                        if (VLCLib.libvlc_media_player_is_seekable(VlcMediaPlayer.Handle) > 0)
+                        if (VLCLib.libvlc_media_player_is_seekable(playerHandle) > 0)
                         {
                             VLCLib.libvlc_media_player_set_time(playerHandle, VLCLib.libvlc_media_player_get_time(playerHandle)
                                 + MilliSecondsFromSettings(Properties.Settings.Default.SecondsForFastForward));
@@ -131,7 +131,7 @@ namespace MediaCenterVLCPlayer
                             int volume = VLCLib.libvlc_audio_get_volume(playerHandle);
                             volume++;
                             VLCLib.libvlc_audio_set_volume(playerHandle, volume);
-                            Form1.WriteMarquee("Volume: " + volume.ToString());
+//                            Form1.WriteMarquee("Volume: " + volume.ToString());
                         }
                         lastiChar = (int)RemoteKeys.WM_VOLUME_UP;
                         return;
@@ -142,7 +142,7 @@ namespace MediaCenterVLCPlayer
                             volume--;
 
                             VLCLib.libvlc_audio_set_volume(playerHandle, volume);
-                            Form1.WriteMarquee("Volume: " + volume.ToString());
+//                            Form1.WriteMarquee("Volume: " + volume.ToString());
                         }
                         lastiChar = (int)RemoteKeys.WM_VOLUME_DOWN;
                         return;
@@ -155,25 +155,25 @@ namespace MediaCenterVLCPlayer
                         return;
                     case (int)RemoteKeys.WM_BACK:
                         lastiChar = (int)RemoteKeys.WM_BACK;
-                        Form1.Closeapp();
+                        Form1.Instance.Closeapp();
                         return;
                     case (int)Keys.Escape:
                         lastiChar = (int)Keys.Escape;
-                        Form1.Closeapp();
+                        Form1.Instance.Closeapp();
                         return;
                     case (int)RemoteKeys.WM_ENTER:
-                        VLCLib.libvlc_media_player_play(VlcMediaPlayer.Handle);
+                        VLCLib.libvlc_media_player_play(playerHandle);
                         lastiChar = (int)RemoteKeys.WM_ENTER;
                         return;
                     case (int)RemoteKeys.WM_PLAY_PAUSE:
-                        VLCLib.libvlc_media_player_pause(VlcMediaPlayer.Handle);
+                        VLCLib.libvlc_media_player_pause(playerHandle);
                         lastiChar = (int)RemoteKeys.WM_PLAY_PAUSE;
                         return;
                     case (int)Keys.P:
                         if (lastiChar == (int)Keys.Control || lastiChar == (int)Keys.ControlKey)
                         {
-                            VLCLib.libvlc_media_player_pause(VlcMediaPlayer.Handle);
-                            Form1.WriteMarquee("Pause");
+                            VLCLib.libvlc_media_player_pause(playerHandle);
+//                            Form1.WriteMarquee("Pause");
                         }
                         lastiChar = (int)RemoteKeys.WM_PAUSE;
                         return;
