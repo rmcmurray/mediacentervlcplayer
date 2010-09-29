@@ -23,30 +23,39 @@ namespace MediaCenterVLCPlayer.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("c:\\program files\\videolan\\vlc\\plugins\\")]
         public string VlcPluginsPath {
             get {
                 return ((string)(this["VlcPluginsPath"]));
             }
+            set {
+                this["VlcPluginsPath"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10")]
         public int SecondsForRewind {
             get {
                 return ((int)(this["SecondsForRewind"]));
             }
+            set {
+                this["SecondsForRewind"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("30")]
         public int SecondsForFastForward {
             get {
                 return ((int)(this["SecondsForFastForward"]));
+            }
+            set {
+                this["SecondsForFastForward"] = value;
             }
         }
         

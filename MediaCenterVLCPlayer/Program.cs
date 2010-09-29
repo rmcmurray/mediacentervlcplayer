@@ -18,6 +18,11 @@ namespace MediaCenterVLCPlayer
             Application.SetCompatibleTextRenderingDefault(false);
             if (args.Length == 0)
                 Environment.Exit(0);
+            if (!Form1.DetectVLC())
+            {
+                MessageBox.Show("VLC was NOT found in it's usual place(s)");
+                Environment.Exit(0);
+            }
             Form1 form = new Form1(args[0]);
             Application.Run(form);
             if (form != null)

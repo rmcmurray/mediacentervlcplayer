@@ -7,15 +7,30 @@ namespace MediaCenterVLCPlayer
     public class VlcEventManager
     {
         private readonly List<VlcEventType> _AttachedEvents;
+        private VlcInstance _instance;
         public static IntPtr Handle;
 
         public void InitalizeEvents()
         {
+            _instance.Logger.writeToLog("Starting up Event Manager");
             AttachEvent(VlcEventType.libvlc_MediaPlayerEndReached, MediaPlayerEnded, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaListPlayerPlayed, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaListPlayerStopped, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerBackward, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerBuffering, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerEncounteredError, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerForward, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerPaused, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerPlaying, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerPositionChanged, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerStopped, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaPlayerTimeChanged, LogEvent, IntPtr.Zero);
+            AttachEvent(VlcEventType.libvlc_MediaStateChanged, LogEvent, IntPtr.Zero);
         }
 
-        internal VlcEventManager(IntPtr p_event_manager)
+        internal VlcEventManager(VlcInstance instance, IntPtr p_event_manager)
         {
+            _instance = instance;
             _AttachedEvents = new List<VlcEventType>();
             VlcEventManager.Handle = p_event_manager;
         }
@@ -40,6 +55,11 @@ namespace MediaCenterVLCPlayer
         public void MediaPlayerEnded(ref VlcEventType type, IntPtr userdata)
         {
             Form1.Instance.Closeapp();
+        }
+
+        public void LogEvent(ref VlcEventType type, IntPtr userdata)
+        {
+            _instance.Logger.writeToLog("[Event]: " + type.ToString());
         }
     }
 }

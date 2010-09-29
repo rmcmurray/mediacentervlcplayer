@@ -201,7 +201,7 @@ namespace MediaCenterVLCPlayerTestSuite
             player = instance.CreatePlayer(BaseTestFilePath + "n900_extremely_short.avi");
             player.Play();
             int currentVolume = player.Volume;
-            player.Volume = player.Volume + 10;
+            player.Volume = currentVolume + 10;
             Assert.IsTrue(currentVolume < player.Volume);
         }
     }
