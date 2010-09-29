@@ -10,7 +10,6 @@ namespace MediaCenterVLCPlayer
     public class VlcMediaPlayer : IDisposable
     {
         private ArrayList _audioOutputs;
-        private ArrayList _audioOutputDevices;
         private ArrayList _aspectRatios;
         public IntPtr Handle;
         private IntPtr drawable;
@@ -18,19 +17,17 @@ namespace MediaCenterVLCPlayer
         private VlcMedia _media;
         private VlcInstance _instance;
 
-        public VlcMediaPlayer(VlcInstance instance, VlcMedia media)
+        public ArrayList AudioOutputs
         {
-            this._instance = instance;
-            this._media = media;
-            Handle = VLCLib.libvlc_media_player_new_from_media(media.Handle);
-            if (Handle == IntPtr.Zero) throw new VlcException();
+            get { return _audioOutputs; }
         }
-
-        public void Dispose()
+        public ArrayList AspectRatios
         {
-            VLCLib.libvlc_media_player_release(Handle);
+            get { return _aspectRatios; }
         }
-
+        public bool IsPlaying { get { return playing && !paused; } }
+        public bool IsPaused { get { return playing && paused; } }
+        public bool IsStopped { get { return !playing; } }
         public IntPtr Drawable
         {
             get { return drawable; }
@@ -40,7 +37,6 @@ namespace MediaCenterVLCPlayer
                 drawable = value;
             }
         }
-
         public VlcMedia Media
         {
             get
@@ -55,6 +51,17 @@ namespace MediaCenterVLCPlayer
             }
         }
 
+        public VlcMediaPlayer(VlcInstance instance, VlcMedia media)
+        {
+            this._instance = instance;
+            this._media = media;
+            Handle = VLCLib.libvlc_media_player_new_from_media(media.Handle);
+            if (Handle == IntPtr.Zero) throw new VlcException();
+        }
+        public void Dispose()
+        {
+            VLCLib.libvlc_media_player_release(Handle);
+        }
         public void Play()
         {
             int ret = VLCLib.libvlc_media_player_play(Handle);
@@ -66,15 +73,12 @@ namespace MediaCenterVLCPlayer
 
             while (VLCLib.libvlc_media_player_is_playing(Handle) < 1)
             {
-                System.Threading.Thread.Sleep(1 * 1000);
+                System.Threading.Thread.Sleep(1 * 300);
             }
             Media.LoadMediaMetaData();
+            loadAudioOutputs();
+            loadAspectRatios();
         }
-
-        public bool IsPlaying { get { return playing && !paused; }}
-        public bool IsPaused { get { return playing && paused; }}
-        public bool IsStopped { get { return !playing; }}
-
         public void Pause()
         {
             VLCLib.libvlc_media_player_pause(Handle);
@@ -82,7 +86,6 @@ namespace MediaCenterVLCPlayer
             if (playing)
                 paused ^= true;
         }
-
         public void Stop()
         {
             VLCLib.libvlc_media_player_stop(Handle);
@@ -90,7 +93,6 @@ namespace MediaCenterVLCPlayer
             playing = false;
             paused = false;
         }
-
         public int Volume
         {
             get
@@ -102,35 +104,35 @@ namespace MediaCenterVLCPlayer
                 VLCLib.libvlc_audio_set_volume(Handle, value);
             }
         }
-
         private void loadAudioOutputs()
         {
-            Logger.WriteToLog("Loading Audio Outputs and Devices");
             try
             {
                 _audioOutputs = new ArrayList();
                 IntPtr pOutputs = VLCLib.libvlc_audio_output_list_get(_instance.Handle);
                 if (pOutputs != IntPtr.Zero)
                 {
-                    int i = 0;
-                    VLCLib.libvlc_audio_output_t output = (VLCLib.libvlc_audio_output_t)Marshal.PtrToStructure(pOutputs, typeof(VLCLib.libvlc_audio_output_t));
-                    Logger.WriteToLog("Audio Output: " + output.psz_name);
-                    int deviceCount = VLCLib.libvlc_audio_output_device_count(_instance.Handle, output.psz_name);
-                    Logger.WriteToLog("Found " + deviceCount.ToString() + " output devices for " + output.psz_name);
-                    if (deviceCount > 0)
-                        _audioOutputs.Add(new AudioOutput(output));
-
-                    while (output.p_next != IntPtr.Zero)
+                    VLCLib.libvlc_audio_output_t output;
+                    do
                     {
-                        i++;
-                        output = (VLCLib.libvlc_audio_output_t)Marshal.PtrToStructure(output.p_next,
-                            typeof(VLCLib.libvlc_audio_output_t));
-                        Logger.WriteToLog("Audio Output: " + output.psz_name);
+                        output = (VLCLib.libvlc_audio_output_t)Marshal.PtrToStructure(pOutputs, typeof(VLCLib.libvlc_audio_output_t));
+                        AudioOutput aOutput = new AudioOutput(output);
                         int mdeviceCount = VLCLib.libvlc_audio_output_device_count(_instance.Handle, output.psz_name);
-                        Logger.WriteToLog("Found " + mdeviceCount.ToString() + " output devices for " + output.psz_name);
                         if (mdeviceCount > 0)
-                            _audioOutputs.Add(new AudioOutput(output));
-                    }
+                        {
+                            for (int k = 0; k < mdeviceCount; k++)
+                            {
+                                AudioDevice device = new AudioDevice();
+                                IntPtr pId = VLCLib.libvlc_audio_output_device_id(_instance.Handle, output.psz_name, k);
+                                device.deviceId = Marshal.PtrToStringAnsi(pId);
+                                IntPtr pLongName = VLCLib.libvlc_audio_output_device_longname(_instance.Handle, output.psz_name, k);
+                                device.deviceName = Marshal.PtrToStringAnsi(pLongName);
+                                aOutput.AddDevice(device);
+                            }
+                            _audioOutputs.Add(aOutput);
+                        }
+                        pOutputs = output.p_next;
+                    } while (output.p_next != IntPtr.Zero);
                 }
                 VLCLib.libvlc_audio_output_list_release(pOutputs);
             }
@@ -139,46 +141,9 @@ namespace MediaCenterVLCPlayer
                 Logger.WriteToLog("Error during loading Audio Outputs: " + e.Message);
             }
         }
-
-        /*
-        private void loadAudioOutputDevices()
-        {
-            Logger.WriteToLog("Loading Audio Output Devices");
-            try
-            {
-                _audioOutputDevices = new System.Collections.Generic.Dictionary<int, AudioDevice[]>();
-                for (int i = 0; i < _audioOutputs.Count; i++)
-                {
-                    int deviceCount = VLCLib.libvlc_audio_output_device_count(VlcInstance.Handle, _audioOutputs[i].psz_name);
-                    Logger.WriteToLog("Found " + deviceCount.ToString() + " devices for Audio Output: " + _audioOutputs[i].psz_name);
-                    if (deviceCount > 0)
-                    {
-                        _audioOutputDevices.Add(i, new AudioDevice[deviceCount]);
-                        for (int d = 0; d < deviceCount; d++)
-                        {
-                            IntPtr pDeviceId = VLCLib.libvlc_audio_output_device_id(VlcInstance.Handle, _audioOutputs[i].psz_name, d);
-                            IntPtr pDeviceName = VLCLib.libvlc_audio_output_device_longname(VlcInstance.Handle, _audioOutputs[i].psz_name, d);
-                            String strDeviceId = Marshal.PtrToStringAnsi(pDeviceId);
-                            String strDeviceName = Marshal.PtrToStringAnsi(pDeviceName);
-                            Logger.WriteToLog("Adding Device: " + strDeviceName);
-                            AudioDevice device = new AudioDevice();
-                            device.deviceId = strDeviceId;
-                            device.deviceName = strDeviceName;
-                            _audioOutputDevices[i][d] = device;
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error loading audio output devices: " + e.Message);
-            }
-        }
-        */
         private void loadAspectRatios()
         {
         }
-
         public bool ChangeSubtitleTrack(int trackIndex)
         {
             if (trackIndex <= _media.SubtitleTracks.Count - 1)

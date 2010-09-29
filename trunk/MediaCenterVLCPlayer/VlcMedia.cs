@@ -14,88 +14,6 @@ namespace MediaCenterVLCPlayer
         private string _defaultAspectRatio;
         private string _currentAspectRatio;
 
-        private void loadTitles() { }
-        private void loadChapters() { }
-        private void loadSubtitlesFromMedia()
-        {
-            Logger.WriteToLog("Loading Subtitle Tracks");
-            try
-            {
-                _subtitleTracks = new ArrayList();
-                int subCount = VLCLib.libvlc_video_get_spu_count(_instance.Player.Handle);
-                IntPtr p_first_track = VLCLib.libvlc_video_get_spu_description(_instance.Player.Handle);
-                IntPtr p_track = p_first_track;
-                for (int i = 0; i < subCount; i++)
-                {
-                    VLCLib.libvlc_track_description_t desc =
-                        (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(p_track,
-                        typeof(VLCLib.libvlc_track_description_t));
-
-                    _subtitleTracks.Add(desc);
-                    if (desc.p_next != IntPtr.Zero)
-                        p_track = desc.p_next;
-                }
-
-                VLCLib.libvlc_track_description_release(p_first_track);
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error loading subtitles: " + e.Message);
-            }
-        }
-        private void loadAudioTracksFromMedia()
-        {
-            Logger.WriteToLog("Loading Audio Outputs and Devices");
-            try
-            {
-                _audioTracks = new ArrayList();
-                int subCount = VLCLib.libvlc_audio_get_track_count(_instance.Player.Handle);
-                IntPtr p_first_track = VLCLib.libvlc_audio_get_track_description(_instance.Player.Handle);
-                IntPtr p_track = p_first_track;
-                for (int i = 0; i < subCount; i++)
-                {
-                    VLCLib.libvlc_track_description_t desc =
-                        (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(p_track,
-                        typeof(VLCLib.libvlc_track_description_t));
-
-                    _audioTracks.Add(desc);
-                    if (desc.p_next != IntPtr.Zero)
-                        p_track = desc.p_next;
-                }
-                VLCLib.libvlc_track_description_release(p_first_track);
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error loading audio tracks: " + e.Message);
-            }
-        }
-        internal VlcMedia(IntPtr handle) {
-            Handle = handle;
-        }
-
-        public VlcMedia(VlcInstance instance, string path)
-        {
-            _instance = instance;
-            _defaultAspectRatio = string.Empty;
-            _currentAspectRatio = string.Empty;
-
-            Handle = VLCLib.libvlc_media_new_path(instance.Handle, path);
-            if (Handle == IntPtr.Zero)
-            {
-                return;
-            }
-        }
-        public void LoadMediaMetaData()
-        {
-            loadTitles();
-            loadChapters();
-            loadAudioTracksFromMedia();
-            loadSubtitlesFromMedia();
-        }
-        public void Dispose()
-        {
-            VLCLib.libvlc_media_release(Handle);
-        }
         public long Length
         {
             get { return VLCLib.libvlc_media_player_get_length(_instance.Player.Handle); }
@@ -157,6 +75,89 @@ namespace MediaCenterVLCPlayer
         public ArrayList AudioTracks
         {
             get { return _audioTracks; }
+        }
+
+        public VlcMedia(VlcInstance instance, string path)
+        {
+            _instance = instance;
+            _defaultAspectRatio = string.Empty;
+            _currentAspectRatio = string.Empty;
+
+            Handle = VLCLib.libvlc_media_new_path(instance.Handle, path);
+            if (Handle == IntPtr.Zero)
+            {
+                return;
+            }
+        }
+        internal VlcMedia(IntPtr handle)
+        {
+            Handle = handle;
+        }
+        public void Dispose()
+        {
+            VLCLib.libvlc_media_release(Handle);
+        }
+        private void loadTitles() { }
+        private void loadChapters() { }
+        private void loadSubtitlesFromMedia()
+        {
+            Logger.WriteToLog("Loading Subtitle Tracks");
+            try
+            {
+                _subtitleTracks = new ArrayList();
+                int subCount = VLCLib.libvlc_video_get_spu_count(_instance.Player.Handle);
+                IntPtr p_first_track = VLCLib.libvlc_video_get_spu_description(_instance.Player.Handle);
+                IntPtr p_track = p_first_track;
+                for (int i = 0; i < subCount; i++)
+                {
+                    VLCLib.libvlc_track_description_t desc =
+                        (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(p_track,
+                        typeof(VLCLib.libvlc_track_description_t));
+
+                    _subtitleTracks.Add(desc);
+                    if (desc.p_next != IntPtr.Zero)
+                        p_track = desc.p_next;
+                }
+
+                VLCLib.libvlc_track_description_release(p_first_track);
+            }
+            catch (Exception e)
+            {
+                Logger.WriteToLog("Error loading subtitles: " + e.Message);
+            }
+        }
+        private void loadAudioTracksFromMedia()
+        {
+            Logger.WriteToLog("Loading Audio Outputs and Devices");
+            try
+            {
+                _audioTracks = new ArrayList();
+                int subCount = VLCLib.libvlc_audio_get_track_count(_instance.Player.Handle);
+                IntPtr p_first_track = VLCLib.libvlc_audio_get_track_description(_instance.Player.Handle);
+                IntPtr p_track = p_first_track;
+                for (int i = 0; i < subCount; i++)
+                {
+                    VLCLib.libvlc_track_description_t desc =
+                        (VLCLib.libvlc_track_description_t)Marshal.PtrToStructure(p_track,
+                        typeof(VLCLib.libvlc_track_description_t));
+
+                    _audioTracks.Add(desc);
+                    if (desc.p_next != IntPtr.Zero)
+                        p_track = desc.p_next;
+                }
+                VLCLib.libvlc_track_description_release(p_first_track);
+            }
+            catch (Exception e)
+            {
+                Logger.WriteToLog("Error loading audio tracks: " + e.Message);
+            }
+        }
+        public void LoadMediaMetaData()
+        {
+            loadTitles();
+            loadChapters();
+            loadAudioTracksFromMedia();
+            loadSubtitlesFromMedia();
         }
     }
 }

@@ -16,9 +16,6 @@ namespace MediaCenterVLCPlayer
     public class SettingsController
     {
         public static SettingsController Instance;
-        public Dictionary<int, VLCLib.libvlc_audio_output_t> _audioOutputs;
-        public Dictionary<int, AudioDevice[]> _audioOutputDevices;
-        public Dictionary<int, String> _aspectRations;
 
         private int _currentAudioDeviceId;
         private int _currentAudioChannelId;
@@ -95,48 +92,6 @@ namespace MediaCenterVLCPlayer
             MediaCenterVLCPlayer.Properties.Settings.Default.Save();
         }
 
-        public void LoadSettings()
-        {
-            _loadAudioOutputs();
-            _loadAudioOutputDevices();
-            _loadAudioTracks();
-            _loadSubtitles();
-            _loadAspectRatios();
-        }
-
-        private void _loadAspectRatios()
-        {
-            Logger.WriteToLog("Loading Aspect Ratios");
-            try
-            {
-                _aspectRations = new Dictionary<int, string>();
-
-                // current video aspect ratio
-                int i = 0;
-                _aspectRations.Add(i++, _player.Media.AspectRatio);
-                _aspectRations.Add(i++, VLCLib.AspectRatio.FullScreen);
-                _aspectRations.Add(i++, VLCLib.AspectRatio.WideScreen);
-                _aspectRations.Add(i++, VLCLib.AspectRatio.DVD);
-                _aspectRations.Add(i++, VLCLib.AspectRatio.Cinemascope);
-            }
-            catch (Exception e)
-            {
-                Logger.WriteToLog("Error adding aspect ratios: " + e.Message);
-            }
-        }
-        private void _loadAudioOutputs()
-        {
-        }
-        private void _loadAudioTracks()
-        {
-        }
-        private void _loadSubtitles()
-        {
-        }
-        private void _loadAudioOutputDevices()
-        {
-        }
-
         public void ApplyDefaultSettings()
         {
             Logger.WriteToLog("Setting default settings for media");
@@ -172,13 +127,41 @@ namespace MediaCenterVLCPlayer
 
         public void SyncMenu()
         {
-            // activate the current audio channels
-            int currentId = VLCLib.libvlc_audio_get_channel(_player.Handle);
-            CurrentAudioChannelId = currentId;
-            SetCurrentActiveMenuItem(Form1.Instance.audioChannelsToolStripMenuItem, Form1.Instance.audioChannelsToolStripMenuItem.DropDownItems[currentId].Name);
+            // sync the Audio Outputs menu
+            ToolStripMenuItem soundDevicesMenuItem = Form1.Instance.soundDevicesToolStripMenuItem;
+
+            for (int i = 0; i < Player.AudioOutputs.Count; i++)
+            {
+                AudioOutput output = (AudioOutput)Player.AudioOutputs[i];
+                if (output.Devices.Count > 0)
+                {
+                    ToolStripMenuItem mItem = new ToolStripMenuItem();
+                    mItem.Name = output.RawOutput.psz_name;
+                    mItem.Text = output.RawOutput.psz_description;
+                    mItem.CheckOnClick = true;
+                    mItem.Available = true;
+                    mItem.Enabled = true;
+                    mItem.Click += new EventHandler(mItem_Click);
+
+                    ArrayList outputDevices = output.Devices;
+                    for (int k = 0; k < outputDevices.Count; k++)
+                    {
+                        ToolStripMenuItem mDeviceItem = new ToolStripMenuItem();
+                        mDeviceItem.Name = ((AudioDevice)outputDevices[k]).deviceId;
+                        mDeviceItem.Text = ((AudioDevice)outputDevices[k]).deviceName;
+                        mDeviceItem.Available = true;
+                        mDeviceItem.Enabled = true;
+                        mDeviceItem.CheckOnClick = true;
+                        mDeviceItem.Click += new EventHandler(mDeviceItem_Click);
+                        mItem.DropDownItems.Add(mDeviceItem);
+                    }
+                    soundDevicesMenuItem.DropDownItems.Add(mItem);
+                }
+            }
+
+            SetCurrentActiveMenuItem(soundDevicesMenuItem, CurrentAudioOutputDeviceId.ToString());
 
             // sync the Audio Tracks menu
-            Logger.WriteToLog("Syncing Audio Tracks menu");
             ToolStripMenuItem audioTracksMenuItem = Form1.Instance.audioTracksToolStripMenuItem;
             ArrayList _audioTracks = _player.Media.AudioTracks;
             for (int a = 0; a < _audioTracks.Count; a++)
@@ -193,42 +176,7 @@ namespace MediaCenterVLCPlayer
             }
             SetCurrentActiveMenuItem(audioTracksMenuItem, VLCLib.libvlc_audio_get_track(_player.Handle).ToString());
 
-            // sync the Audio Outputs menu
-            Logger.WriteToLog("Syncing sound outputs menu");
-            ToolStripMenuItem soundDevicesMenuItem = Form1.Instance.soundDevicesToolStripMenuItem;
-
-            for (int i = 0; i < _audioOutputs.Count; i++)
-            {
-                VLCLib.libvlc_audio_output_t output = (VLCLib.libvlc_audio_output_t)_audioOutputs[i];
-                ToolStripMenuItem mItem = new ToolStripMenuItem();
-                mItem.Name = output.psz_name;
-                mItem.Text = output.psz_description;
-                mItem.CheckOnClick = true;
-                mItem.Available = true;
-                mItem.Enabled = true;
-                mItem.Click += new EventHandler(mItem_Click);
-                AudioDevice[] devices = _audioOutputDevices[i];
-                Logger.WriteToLog("Adding " + devices.Length + " devices");
-                for (int k = 0; k < devices.Length; k++)
-                {
-                    Logger.WriteToLog("Syncing sound devices for audio output: " + output.psz_description + ": Device: " + devices[k].deviceName);
-                    ToolStripMenuItem mDeviceItem = new ToolStripMenuItem();
-                    mDeviceItem.Name = devices[k].deviceId;
-                    mDeviceItem.Text = devices[k].deviceName;
-                    mDeviceItem.Available = true;
-                    mDeviceItem.Enabled = true;
-                    mDeviceItem.CheckOnClick = true;
-                    mDeviceItem.Click += new EventHandler(mDeviceItem_Click);
-                    mItem.DropDownItems.Add(mDeviceItem);
-                }
-                soundDevicesMenuItem.DropDownItems.Add(mItem);
-                Logger.WriteToLog("Done Syncing audio output device: " + output.psz_description);
-            }
-
-            SetCurrentActiveMenuItem(soundDevicesMenuItem, CurrentAudioOutputDeviceId.ToString());
-
-            // sync the Audio Subtitles menu
-            Logger.WriteToLog("Syncing subtitles menu");
+            // sync the Subtitles menu
             ToolStripMenuItem subtitlesMenuItem = Form1.Instance.subtitlesToolStripMenuItem;
             ArrayList _subtitleTracks = _player.Media.SubtitleTracks;
             for (int j = 0; j < _subtitleTracks.Count; j++)
@@ -245,12 +193,11 @@ namespace MediaCenterVLCPlayer
             if (_subtitleTracks.Count > 0)
                 SetCurrentActiveMenuItem(subtitlesMenuItem, CurrentSubtitleTrackId.ToString());
 
-            Logger.WriteToLog("Syncing aspect ratios menu");
+            // sync aspect ratio menu
             ToolStripMenuItem apItem = Form1.Instance.aspectRatioToolStripMenuItem;
-            for (int i = 0; i < _aspectRations.Count; i++)
+            for (int i = 0; i < Player.AspectRatios.Count; i++)
             {
-                String aRatio = _aspectRations[i];
-                Logger.WriteToLog("Adding Aspect Ratio: " + aRatio);
+                String aRatio = (string)Player.AspectRatios[i];
                 ToolStripMenuItem mItem = new ToolStripMenuItem();
                 mItem.Name = i.ToString();
                 mItem.Text = aRatio;
@@ -273,7 +220,6 @@ namespace MediaCenterVLCPlayer
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, newValue.ToString());
         }
-
         void aItem_Click(object sender, EventArgs e)
         {
             string id = ((ToolStripMenuItem)sender).Name;
@@ -283,7 +229,6 @@ namespace MediaCenterVLCPlayer
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, id);
         }
-
         void mItem_Click(object sender, EventArgs e)
         {
             string name = ((ToolStripMenuItem)sender).Text;
@@ -293,7 +238,6 @@ namespace MediaCenterVLCPlayer
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, name);
         }
-
         void mDeviceItem_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
@@ -311,7 +255,6 @@ namespace MediaCenterVLCPlayer
             ToolStripMenuItem parent = (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem;
             SetCurrentActiveMenuItem(parent, deviceId);
         }
-
         void subtitleMenu_Click(object sender, EventArgs e)
         {
             string id = ((ToolStripMenuItem)sender).Name;
@@ -331,7 +274,6 @@ namespace MediaCenterVLCPlayer
             }
             Form1.Instance.Refresh();
         }
-
         public void seventPointOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
             VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_7_1);
@@ -340,7 +282,6 @@ namespace MediaCenterVLCPlayer
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
-
         public void sixPointOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
             VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_6_1);
@@ -349,7 +290,6 @@ namespace MediaCenterVLCPlayer
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
-
         public void fivePointOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
             VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_5_1);
@@ -358,7 +298,6 @@ namespace MediaCenterVLCPlayer
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
-
         public void stereoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Stereo);
@@ -367,7 +306,6 @@ namespace MediaCenterVLCPlayer
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
-
         public void monoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_Mono);
@@ -376,7 +314,6 @@ namespace MediaCenterVLCPlayer
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
-
         public void spdifToolStripMenuItem_Click(object sender, EventArgs e)
         {
             VLCLib.libvlc_audio_output_set_device_type(_player.Handle, (int)VLCLib.libvlc_audio_output_device_type_t.libvlc_AudioOutputDevice_SPDIF);
@@ -385,7 +322,6 @@ namespace MediaCenterVLCPlayer
                 (ToolStripMenuItem)((ToolStripMenuItem)sender).OwnerItem,
                 ((ToolStripMenuItem)sender).Name);
         }
-
         public void saveAsDefaultToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
@@ -393,7 +329,6 @@ namespace MediaCenterVLCPlayer
             int audioDeviceId = VLCLib.libvlc_audio_output_get_device_type(_player.Handle);
             SettingsController.Instance.SaveSettings();
         }
-
         public void disabledToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_player.Media.SubtitleTracks.Count > 0)

@@ -55,12 +55,10 @@ namespace MediaCenterVLCPlayerTestSuite
         //}
         //
         //Use TestInitialize to run code before running each test
-        [TestInitialize()]
-        public void MyTestInitialize()
-        {
-            VlcInstance instance = new VlcInstance(VlcInstanceArgs);
-            VlcMediaPlayer player = instance.CreatePlayer(BaseTestFilePath + "n900_extremely_short.avi");
-        }
+        //[TestInitialize()]
+        //public void MyTestInitialize()
+        //{
+        //}
         //
         //Use TestCleanup to run code after each test has run
         //[TestCleanup()]

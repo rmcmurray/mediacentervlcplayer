@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace MediaCenterVLCPlayer
 {
@@ -40,6 +41,10 @@ namespace MediaCenterVLCPlayer
                 @"--plugin-path=" + MediaCenterVLCPlayer.Properties.Settings.Default.VlcPluginsPath
             };
 
+            if (!System.IO.Directory.Exists(MediaCenterVLCPlayer.Properties.Settings.Default.VlcPluginsPath))
+            {
+                DialogResult result = MessageBox.Show("Error: we do NOT have a valid location for the VLC plugins folder", "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+            }
             // init VLC
             try
             {
@@ -47,11 +52,9 @@ namespace MediaCenterVLCPlayer
             }
             catch (VlcException e)
             {
-
+                MessageBox.Show("Error creating VLC Instance:" + e.Message);
+                Environment.Exit(0);
             }
-
-            IntPtr logger = VLCLib.libvlc_log_open(instance.Handle);
-            VLCLib.libvlc_set_log_verbosity(instance.Handle, 10);
 
             player = instance.CreatePlayer(mediafile);
             player.Drawable = panelHandle;
@@ -59,7 +62,7 @@ namespace MediaCenterVLCPlayer
             remoteManager.playerHandle = player.Handle;
 
             IntPtr p_event_manager = VLCLib.libvlc_media_player_event_manager(player.Handle);
-            eventmanager = new VlcEventManager(p_event_manager);
+            eventmanager = new VlcEventManager(instance, p_event_manager);
             eventmanager.InitalizeEvents();
         }
 
@@ -73,7 +76,6 @@ namespace MediaCenterVLCPlayer
             // activate the settings controller
             settings = new SettingsController();
             settings.Player = player;
-            settings.LoadSettings();
             settings.SyncMenu();
             settings.ApplyDefaultSettings();
         }
@@ -99,6 +101,63 @@ namespace MediaCenterVLCPlayer
                 Logger.Instance.Close();
 
             Environment.Exit(0);
+        }
+
+        public static bool DetectVLC()
+        {
+            string dSeparator = Convert.ToString(Path.DirectorySeparatorChar);
+            if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc" }) })))
+            {
+                if (File.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "vlc.exe" }) })))
+                {
+                    if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) })))
+                    {
+                        MediaCenterVLCPlayer.Properties.Settings.Default.VlcPluginsPath
+                            = String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) });
+                        MediaCenterVLCPlayer.Properties.Settings.Default.Save();
+                        return true;
+                    }
+                }
+            }
+            else if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc" }) })))
+            {
+                if (File.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "vlc.exe" }) })))
+                {
+                    if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) })))
+                    {
+                        MediaCenterVLCPlayer.Properties.Settings.Default.VlcPluginsPath
+                            = String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) });
+                        MediaCenterVLCPlayer.Properties.Settings.Default.Save();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public int SecondsForRewind
+        {
+            get { return MediaCenterVLCPlayer.Properties.Settings.Default.SecondsForRewind; }
+            set { MediaCenterVLCPlayer.Properties.Settings.Default.SecondsForRewind = value; }
+        }
+        public int SecondsForFastForward
+        {
+            get { return MediaCenterVLCPlayer.Properties.Settings.Default.SecondsForFastForward; }
+            set { MediaCenterVLCPlayer.Properties.Settings.Default.SecondsForFastForward = value; }
+        }
+        public int DefaultAudioChannelsId
+        {
+            get { return MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioChannelsId; }
+            set { MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioChannelsId = value; }
+        }
+        public int DefaultAudioDeviceId
+        {
+            get { return MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioDeviceId; }
+            set { MediaCenterVLCPlayer.Properties.Settings.Default.DefaultAudioDeviceId = value; }
+        }
+        public void SaveDefaultSettings()
+        {
+            MediaCenterVLCPlayer.Properties.Settings.Default.Save();
         }
     }
 }

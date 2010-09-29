@@ -2,13 +2,13 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MediaCenterVLCPlayer.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="VlcPluginsPath" Type="System.String" Scope="Application">
+    <Setting Name="VlcPluginsPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">c:\program files\videolan\vlc\plugins\</Value>
     </Setting>
-    <Setting Name="SecondsForRewind" Type="System.Int32" Scope="Application">
+    <Setting Name="SecondsForRewind" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">10</Value>
     </Setting>
-    <Setting Name="SecondsForFastForward" Type="System.Int32" Scope="Application">
+    <Setting Name="SecondsForFastForward" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">30</Value>
     </Setting>
     <Setting Name="DefaultAudioChannelsId" Type="System.Int32" Scope="User">
