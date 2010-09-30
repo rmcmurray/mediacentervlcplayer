@@ -101,9 +101,9 @@ namespace MediaCenterVLCPlayerTestSuite
             VlcMediaPlayer player = instance.CreatePlayer(BaseTestFilePath + "mewmew-vorbis-ssa.mkv");
             player.Play();
 
-            int currentSubtitleTrackId = VLCLib.libvlc_video_get_spu(player.Handle);
+            int currentSubtitleTrackId = VLCLibrary.Instance.video_get_spu(player.Handle);
             player.ChangeSubtitleTrack(3);
-            Assert.AreNotEqual(currentSubtitleTrackId, VLCLib.libvlc_video_get_spu(player.Handle));
+            Assert.AreNotEqual(currentSubtitleTrackId, VLCLibrary.Instance.video_get_spu(player.Handle));
         }
 
         /// <summary>

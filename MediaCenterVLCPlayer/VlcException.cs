@@ -10,7 +10,7 @@ namespace MediaCenterVLCPlayer
         public VlcException()
             : base()
         {
-            IntPtr errorPointer = VLCLib.libvlc_errmsg();
+            IntPtr errorPointer = VLCLibrary.Instance.errmsg();
             _err = errorPointer == IntPtr.Zero ? "VLC Exception"
                 : Marshal.PtrToStringAuto(errorPointer);
         }
