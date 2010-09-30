@@ -20,13 +20,20 @@ namespace MediaCenterVLCPlayer
 
         public VlcInstance(string[] args)
         {
-            Handle = VLCLib.libvlc_new(args.Length, args);
+            if (VLCLibrary.Instance == null)
+            {
+                new VLCLibrary();
+                VLCLibrary.Instance.DetectVLC();
+            }
+
+            VLCLibrary.Instance.SetupVLC();
+            Handle = VLCLibrary.Instance.new_vlc(args.Length, args);
             if (Handle == IntPtr.Zero) throw new VlcException();
             _logger = new Logger();
         }
         public void Dispose()
         {
-            VLCLib.libvlc_release(Handle);
+            VLCLibrary.Instance.release_vlc(Handle);
             if (_logger != null)
                 _logger.Close();
         }

@@ -13,6 +13,7 @@ namespace MediaCenterVLCPlayer
     {
         public static Form1 Instance;
         public MCRemoteControlManager remoteManager;
+        VLCLibrary vlcLibrary;
         VlcInstance instance;
         VlcMediaPlayer player;
         VlcEventManager eventmanager;
@@ -28,6 +29,18 @@ namespace MediaCenterVLCPlayer
             this.Focus();
             this.TopMost = true;
             this.Refresh();
+
+            vlcLibrary = new VLCLibrary();
+            if (vlcLibrary.DetectVLC())
+            {
+                try
+                {
+                    vlcLibrary.SetupVLC();
+                }
+                catch (Exception e)
+                {
+                }
+            }
 
             // activate the remote control hooks
             remoteManager = new MCRemoteControlManager();
@@ -61,7 +74,7 @@ namespace MediaCenterVLCPlayer
             // give the remote control lib access to the active panel so it gets keyboard/mouse/remote events
             remoteManager.playerHandle = player.Handle;
 
-            IntPtr p_event_manager = VLCLib.libvlc_media_player_event_manager(player.Handle);
+            IntPtr p_event_manager = vlcLibrary.media_player_event_manager(player.Handle);
             eventmanager = new VlcEventManager(instance, p_event_manager);
             eventmanager.InitalizeEvents();
         }
@@ -69,7 +82,7 @@ namespace MediaCenterVLCPlayer
         public void PlayMedia()
         {
             player.Play();
-            while (VLCLib.libvlc_media_player_is_playing(player.Handle) < 1)
+            while (vlcLibrary.media_player_is_playing(player.Handle) < 1)
             {
                 System.Threading.Thread.Sleep(1 * 100);
             }
@@ -82,57 +95,20 @@ namespace MediaCenterVLCPlayer
 
         public void Closeapp()
         {
-            if (VLCLib.libvlc_media_player_is_playing(player.Handle) > 0)
+            if (vlcLibrary.media_player_is_playing(player.Handle) > 0)
             {
-                VLCLib.libvlc_media_player_stop(player.Handle);
+                vlcLibrary.media_player_stop(player.Handle);
             }
 
             if (player.Handle != IntPtr.Zero)
             {
-                VLCLib.libvlc_media_release(player.Media.Handle);
-            }
-
-            if (instance != null && instance.Handle != IntPtr.Zero)
-            {
-                VLCLib.libvlc_release(instance.Handle);
+                vlcLibrary.media_release(player.Media.Handle);
             }
 
             if (Logger.Instance != null)
                 Logger.Instance.Close();
 
             Environment.Exit(0);
-        }
-
-        public static bool DetectVLC()
-        {
-            string dSeparator = Convert.ToString(Path.DirectorySeparatorChar);
-            if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc" }) })))
-            {
-                if (File.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "vlc.exe" }) })))
-                {
-                    if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) })))
-                    {
-                        MediaCenterVLCPlayer.Properties.Settings.Default.VlcPluginsPath
-                            = String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFiles.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) });
-                        MediaCenterVLCPlayer.Properties.Settings.Default.Save();
-                        return true;
-                    }
-                }
-            }
-            else if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc" }) })))
-            {
-                if (File.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "vlc.exe" }) })))
-                {
-                    if (Directory.Exists(String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) })))
-                    {
-                        MediaCenterVLCPlayer.Properties.Settings.Default.VlcPluginsPath
-                            = String.Join(dSeparator, new string[] { Environment.SpecialFolder.ProgramFilesX86.ToString(), String.Join(dSeparator, new string[] { "videolan", "vlc", "plugins" }) });
-                        MediaCenterVLCPlayer.Properties.Settings.Default.Save();
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
 
         public int SecondsForRewind

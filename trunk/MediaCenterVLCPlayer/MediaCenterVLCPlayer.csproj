@@ -105,19 +105,11 @@
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsController.cs" />
     <Compile Include="VlcEventManager.cs" />
-    <Compile Include="VlcEventType.cs" />
     <Compile Include="VlcException.cs" />
     <Compile Include="VlcInstance.cs" />
-    <Compile Include="VLCLib.cs" />
+    <Compile Include="VLCLibrary.cs" />
     <Compile Include="VlcMedia.cs" />
     <Compile Include="VlcMediaPlayer.cs" />
-    <Compile Include="VlcState.cs" />
-    <Compile Include="VolumeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="VolumeControl.Designer.cs">
-      <DependentUpon>VolumeControl.cs</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -131,9 +123,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="VolumeControl.resx">
-      <DependentUpon>VolumeControl.cs</DependentUpon>
-    </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">

@@ -6,7 +6,7 @@ namespace MediaCenterVLCPlayer
 {
     class AudioOutput
     {
-        private VLCLib.libvlc_audio_output_t _output;
+        private VLCLibrary.libvlc_audio_output_t _output;
         private ArrayList _outputDevices;
 
         public ArrayList Devices
@@ -14,12 +14,12 @@ namespace MediaCenterVLCPlayer
             get { return _outputDevices; }
         }
 
-        public VLCLib.libvlc_audio_output_t RawOutput
+        public VLCLibrary.libvlc_audio_output_t RawOutput
         {
             get { return _output; }
         }
 
-        public AudioOutput(VLCLib.libvlc_audio_output_t output)
+        public AudioOutput(VLCLibrary.libvlc_audio_output_t output)
         {
             _output = output;
             _outputDevices = new ArrayList();
