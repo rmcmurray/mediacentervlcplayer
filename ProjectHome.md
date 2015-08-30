@@ -1,0 +1,1 @@
+MediaCenterVLCPlayer is a plugin for Windows Media Center that allows VLC to be used as an external video player.  This can be used with a number of plugins such as VideoLibrary, OML, MediaBrowser and likely more.
